@@ -4,13 +4,14 @@ A Python terminal application to download files and folders from Google Drive.
 
 ## Features
 
-- ✅ Download single files from Google Drive
-- ✅ Download entire folders with all contents
-- ✅ Download multiple files/folders at once
+- ✅ Download files/folders from ONE Google Drive link
+- ✅ Download files/folders from MULTIPLE Google Drive links
+- ✅ Download entire folders with all contents preserved
 - ✅ Preserves folder names and structure
 - ✅ Handles duplicate names automatically (adds `(1)`, `(2)`, etc.)
 - ✅ Detects private/inaccessible links with helpful error messages
 - ✅ Progress bar for downloads
+- ✅ Download summary (total, success, failed counts)
 - ✅ Supports Sinhala and other Unicode filenames
 
 ## Requirements
@@ -58,9 +59,15 @@ A Python terminal application to download files and folders from Google Drive.
 2. **Choose output folder** (or press Enter for default `downloads` folder)
 
 3. **Select an option:**
-   - `1` - Download a single file or folder
-   - `2` - Download multiple files/folders
-   - `3` - Exit
+   ```
+   ==================================================
+   OPTIONS:
+   ==================================================
+   1. Download files/folders from ONE Google Drive link
+   2. Download files/folders from MULTIPLE Google Drive links
+   3. Exit
+   ==================================================
+   ```
 
 ### Supported URL Formats
 
@@ -72,37 +79,61 @@ A Python terminal application to download files and folders from Google Drive.
 
 ## Examples
 
-### Download a single file
+### Option 1: Download from ONE link
 ```
 Enter choice (1-3): 1
-Enter Google Drive URL: https://drive.google.com/file/d/1ABC123xyz/view
+
+[Single Link Download]
+------------------------------
+Enter Google Drive URL (file or folder): https://drive.google.com/drive/folders/1XYZ789abc
+Detected: FOLDER URL
+Folder name: Physics Notes
+Downloading...
+Successfully downloaded folder to: downloads\Physics Notes
 ```
 
-### Download a folder
-```
-Enter choice (1-3): 1
-Enter Google Drive URL: https://drive.google.com/drive/folders/1XYZ789abc
-```
-
-### Download multiple items
+### Option 2: Download from MULTIPLE links
 ```
 Enter choice (1-3): 2
-Enter Google Drive URLs (one per line, empty line to finish):
-https://drive.google.com/file/d/1ABC123xyz/view
-https://drive.google.com/drive/folders/1XYZ789abc
 
+[Multiple Links Download]
+------------------------------
+Enter Google Drive URLs (one per line)
+Press Enter on empty line when finished:
+
+  Link 1: https://drive.google.com/drive/folders/abc123
+  Link 2: https://drive.google.com/file/d/xyz789/view
+  Link 3: https://drive.google.com/drive/folders/def456
+  Link 4: 
+
+==================================================
+Starting download of 3 items...
+==================================================
+
+[1/3] Downloading...
+...
+
+==================================================
+DOWNLOAD SUMMARY
+==================================================
+  Total: 3
+  Success: 2
+  Failed: 1
+==================================================
 ```
 
 ## Output Structure
 
 ```
 downloads/
-├── FolderName/
-│   ├── file1.pdf
-│   ├── file2.jpg
+├── Physics Notes/
+│   ├── English.pdf
+│   ├── Sinhala.pdf
 │   └── subfolder/
-│       └── file3.docx
-├── FolderName (1)/          # Duplicate folder
+│       └── extra.docx
+├── Physics Notes (1)/       # Duplicate folder (auto-renamed)
+│   └── ...
+├── Chemistry Notes/
 │   └── ...
 └── single_file.pdf
 ```
@@ -118,10 +149,22 @@ Possible reasons:
   1. The folder is PRIVATE (not shared)
   2. The folder requires sign-in
   3. The folder doesn't exist
+  4. The link is invalid
 
 Solution:
   - Ask the owner to share the folder
   - Set folder to 'Anyone with the link' can view
+==================================================
+```
+
+### Permission Denied
+```
+==================================================
+ERROR: Permission denied!
+==================================================
+The folder exists but you don't have access.
+Ask the owner to change sharing settings to:
+  'Anyone with the link' can view
 ==================================================
 ```
 
