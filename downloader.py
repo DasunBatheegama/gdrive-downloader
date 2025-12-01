@@ -2,6 +2,8 @@ import gdown
 import os
 import re
 import sys
+import requests
+from bs4 import BeautifulSoup
 
 
 def extract_file_id(url):
@@ -38,24 +40,57 @@ def is_folder_url(url):
     return '/folders/' in url
 
 
+def get_folder_name(folder_id):
+    """Get folder name from Google Drive"""
+    try:
+        url = f"https://drive.google.com/drive/folders/{folder_id}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            title_tag = soup.find('title')
+            if title_tag:
+                title = title_tag.text
+                # Remove " - Google Drive" suffix
+                if " - Google Drive" in title:
+                    folder_name = title.replace(" - Google Drive", "").strip()
+                    if folder_name:
+                        return folder_name
+                return title.strip()
+    except Exception as e:
+        print(f"Could not get folder name: {e}")
+    
+    return f"folder_{folder_id[:8]}"  # Return short folder ID as fallback
+
+
 def download_folder(url, output_folder):
-    """Download all files from a Google Drive folder"""
+    """Download all files from a Google Drive folder with folder name preserved"""
     folder_id = extract_folder_id(url)
     
     if not folder_id:
         print(f"Error: Could not extract folder ID from URL: {url}")
         return False
     
+    # Get the folder name from Google Drive
+    folder_name = get_folder_name(folder_id)
+    print(f"Folder name: {folder_name}")
+    
+    # Create output path with folder name (e.g., downloads/Testing/)
+    final_output = os.path.join(output_folder, folder_name)
+    
     # Create output folder if it doesn't exist
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-        print(f"Created folder: {output_folder}")
+    if not os.path.exists(final_output):
+        os.makedirs(final_output)
+        print(f"Created folder: {final_output}")
     
     try:
         print(f"Downloading folder ID: {folder_id}")
         folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
-        gdown.download_folder(folder_url, output=output_folder, quiet=False)
-        print(f"Successfully downloaded folder to: {output_folder}")
+        gdown.download_folder(folder_url, output=final_output, quiet=False)
+        print(f"Successfully downloaded folder to: {final_output}")
         return True
             
     except Exception as e:
