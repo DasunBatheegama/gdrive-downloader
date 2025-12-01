@@ -50,6 +50,29 @@ def sanitize_filename(name):
     return sanitized if sanitized else "unnamed_folder"
 
 
+def get_unique_path(path):
+    """Get a unique path by adding (1), (2), etc. if path already exists"""
+    if not os.path.exists(path):
+        return path
+    
+    base_path = path
+    counter = 1
+    
+    # For files with extension
+    if '.' in os.path.basename(path):
+        name, ext = os.path.splitext(path)
+        while os.path.exists(path):
+            path = f"{name} ({counter}){ext}"
+            counter += 1
+    else:
+        # For folders or files without extension
+        while os.path.exists(path):
+            path = f"{base_path} ({counter})"
+            counter += 1
+    
+    return path
+
+
 def get_folder_name(folder_id):
     """Get folder name from Google Drive"""
     try:
@@ -113,6 +136,9 @@ def download_folder(url, output_folder):
     
     # Create output path with folder name (e.g., downloads/Testing/)
     final_output = os.path.join(output_folder, folder_name)
+    
+    # Get unique path if folder already exists (adds (1), (2), etc.)
+    final_output = get_unique_path(final_output)
     
     # Create output folder if it doesn't exist
     if not os.path.exists(final_output):
