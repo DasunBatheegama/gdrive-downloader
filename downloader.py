@@ -242,14 +242,19 @@ def main():
         output_folder = "downloads"
     
     while True:
-        print("\nOptions:")
-        print("1. Download a file or folder")
-        print("2. Download multiple files/folders")
+        print("\n" + "=" * 50)
+        print("OPTIONS:")
+        print("=" * 50)
+        print("1. Download files/folders from ONE Google Drive link")
+        print("2. Download files/folders from MULTIPLE Google Drive links")
         print("3. Exit")
+        print("=" * 50)
         
         choice = input("\nEnter choice (1-3): ").strip()
         
         if choice == "1":
+            print("\n[Single Link Download]")
+            print("-" * 30)
             url = input("Enter Google Drive URL (file or folder): ").strip()
             if url:
                 download(url, output_folder)
@@ -257,27 +262,52 @@ def main():
                 print("No URL provided!")
                 
         elif choice == "2":
-            print("Enter Google Drive URLs (one per line, empty line to finish):")
+            print("\n[Multiple Links Download]")
+            print("-" * 30)
+            print("Enter Google Drive URLs (one per line)")
+            print("Press Enter on empty line when finished:")
+            print()
             urls = []
+            count = 1
             while True:
-                url = input().strip()
+                url = input(f"  Link {count}: ").strip()
                 if not url:
                     break
                 urls.append(url)
+                count += 1
             
             if urls:
-                print(f"\nDownloading {len(urls)} items...")
+                print(f"\n{'=' * 50}")
+                print(f"Starting download of {len(urls)} items...")
+                print(f"{'=' * 50}")
+                
+                success_count = 0
+                fail_count = 0
+                
                 for i, url in enumerate(urls, 1):
-                    print(f"\n[{i}/{len(urls)}]")
-                    download(url, output_folder)
+                    print(f"\n[{i}/{len(urls)}] Downloading...")
+                    print("-" * 30)
+                    if download(url, output_folder):
+                        success_count += 1
+                    else:
+                        fail_count += 1
+                
+                # Summary
+                print(f"\n{'=' * 50}")
+                print("DOWNLOAD SUMMARY")
+                print(f"{'=' * 50}")
+                print(f"  Total: {len(urls)}")
+                print(f"  Success: {success_count}")
+                print(f"  Failed: {fail_count}")
+                print(f"{'=' * 50}")
             else:
                 print("No URLs provided!")
                 
         elif choice == "3":
-            print("Goodbye!")
+            print("\nGoodbye! Thank you for using Google Drive Downloader.")
             break
         else:
-            print("Invalid choice!")
+            print("Invalid choice! Please enter 1, 2, or 3.")
 
 
 if __name__ == "__main__":
