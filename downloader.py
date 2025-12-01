@@ -221,9 +221,13 @@ def download_file(url, output_folder):
 
 def download(url, output_folder):
     """Download file or folder based on URL type"""
+    url = url.strip()
+    
     if is_folder_url(url):
+        print("Detected: FOLDER URL")
         return download_folder(url, output_folder)
     else:
+        print("Detected: FILE URL")
         return download_file(url, output_folder)
 
 
