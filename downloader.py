@@ -40,6 +40,16 @@ def is_folder_url(url):
     return '/folders/' in url
 
 
+def sanitize_filename(name):
+    """Remove invalid characters from filename/folder name for Windows"""
+    # Replace invalid Windows characters: \ / : * ? " < > |
+    invalid_chars = r'[\\/:*?"<>|]'
+    sanitized = re.sub(invalid_chars, '_', name)
+    # Remove leading/trailing spaces and dots
+    sanitized = sanitized.strip('. ')
+    return sanitized if sanitized else "unnamed_folder"
+
+
 def get_folder_name(folder_id):
     """Get folder name from Google Drive"""
     try:
@@ -53,13 +63,19 @@ def get_folder_name(folder_id):
             soup = BeautifulSoup(response.text, 'html.parser')
             title_tag = soup.find('title')
             if title_tag:
-                title = title_tag.text
+                title = title_tag.text.strip()
+                
+                # Check if it's a sign-in page (private folder)
+                if "Sign-in" in title or "sign in" in title.lower():
+                    return None  # Indicates private folder
+                
                 # Remove " - Google Drive" suffix
                 if " - Google Drive" in title:
-                    folder_name = title.replace(" - Google Drive", "").strip()
-                    if folder_name:
-                        return folder_name
-                return title.strip()
+                    title = title.replace(" - Google Drive", "").strip()
+                
+                # Sanitize the folder name for Windows
+                return sanitize_filename(title) if title else None
+                
     except Exception as e:
         print(f"Could not get folder name: {e}")
     
@@ -76,6 +92,23 @@ def download_folder(url, output_folder):
     
     # Get the folder name from Google Drive
     folder_name = get_folder_name(folder_id)
+    
+    # Check if folder is private/inaccessible
+    if folder_name is None:
+        print("\n" + "=" * 50)
+        print("ERROR: Cannot access this folder!")
+        print("=" * 50)
+        print("Possible reasons:")
+        print("  1. The folder is PRIVATE (not shared)")
+        print("  2. The folder requires sign-in")
+        print("  3. The folder doesn't exist")
+        print("  4. The link is invalid")
+        print("\nSolution:")
+        print("  - Ask the owner to share the folder")
+        print("  - Set folder to 'Anyone with the link' can view")
+        print("=" * 50 + "\n")
+        return False
+    
     print(f"Folder name: {folder_name}")
     
     # Create output path with folder name (e.g., downloads/Testing/)
@@ -90,11 +123,21 @@ def download_folder(url, output_folder):
         print(f"Downloading folder ID: {folder_id}")
         folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
         gdown.download_folder(folder_url, output=final_output, quiet=False)
-        print(f"Successfully downloaded folder to: {final_output}")
+        print(f"\nSuccessfully downloaded folder to: {final_output}")
         return True
             
     except Exception as e:
-        print(f"Error downloading folder: {e}")
+        error_msg = str(e).lower()
+        if "permission" in error_msg or "access" in error_msg:
+            print("\n" + "=" * 50)
+            print("ERROR: Permission denied!")
+            print("=" * 50)
+            print("The folder exists but you don't have access.")
+            print("Ask the owner to change sharing settings to:")
+            print("  'Anyone with the link' can view")
+            print("=" * 50 + "\n")
+        else:
+            print(f"Error downloading folder: {e}")
         return False
 
 
@@ -122,11 +165,31 @@ def download_file(url, output_folder):
             print(f"Successfully downloaded: {output_path}")
             return True
         else:
-            print("Download failed!")
+            print("\n" + "=" * 50)
+            print("ERROR: Download failed!")
+            print("=" * 50)
+            print("Possible reasons:")
+            print("  1. The file is PRIVATE")
+            print("  2. The file requires sign-in")
+            print("  3. The file doesn't exist")
+            print("\nSolution:")
+            print("  - Ask the owner to share the file")
+            print("  - Set file to 'Anyone with the link' can view")
+            print("=" * 50 + "\n")
             return False
             
     except Exception as e:
-        print(f"Error downloading file: {e}")
+        error_msg = str(e).lower()
+        if "permission" in error_msg or "access" in error_msg or "denied" in error_msg:
+            print("\n" + "=" * 50)
+            print("ERROR: Permission denied!")
+            print("=" * 50)
+            print("The file is private or requires sign-in.")
+            print("Ask the owner to share the file with:")
+            print("  'Anyone with the link' can view")
+            print("=" * 50 + "\n")
+        else:
+            print(f"Error downloading file: {e}")
         return False
 
 
